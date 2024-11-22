@@ -20,7 +20,10 @@ func main() {
 	// Register routes
 	router.POST("/book", controllers.CreateBooK)
 	router.GET("/books", controllers.GetBookList)
+	router.PUT("/book", controllers.UpdateBook)
+	router.DELETE("/book", controllers.DeleteBook)
 
 	// Start the server
 	router.Run(":8080")
+
 }
