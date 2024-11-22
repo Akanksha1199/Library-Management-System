@@ -77,3 +77,22 @@ func DeleteBook(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Book deleted successfully."})
 
 }
+
+func GetBookById(c *gin.Context) {
+
+	id := c.Query("id")
+
+	bookID, err := strconv.Atoi(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error()})
+		return
+	}
+
+	book, err := models.GetBookById(bookID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": book})
+}

@@ -118,3 +118,23 @@ func DeleteBook(bookID int) error {
 	fmt.Println("Book Deleted successfully")
 	return nil
 }
+
+func GetBookById(id int) (Book, error) {
+	var cost int
+	var name string
+	var book Book
+
+	query := "SELECT id,name,cost FROM book WHERE id = $1"
+
+	err := db.QueryRow(query, id).Scan(&id, &name, &cost)
+	if err != nil {
+		log.Printf("no book found with id %d", id)
+		return book, err
+	}
+	book = Book{
+		ID:   id,
+		Name: name,
+		Cost: cost,
+	}
+	return book, nil
+}
