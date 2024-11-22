@@ -22,6 +22,7 @@ func main() {
 	router.GET("/books", controllers.GetBookList)
 	router.PUT("/book", controllers.UpdateBook)
 	router.DELETE("/book", controllers.DeleteBook)
+	router.GET("/book", controllers.GetBookById)
 
 	// Start the server
 	router.Run(":8080")
