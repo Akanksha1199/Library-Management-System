@@ -9,7 +9,7 @@ import (
 var db *sql.DB
 
 // ConnectToDB initializes the connection to the PostgreSQL database.
-func ConnectToDB() {
+func ConnectToDB() error {
 	const (
 		host     = "localhost"
 		port     = 5432
@@ -24,14 +24,17 @@ func ConnectToDB() {
 	var err error
 	db, err = sql.Open("postgres", psqlInfo)
 	if err != nil {
-		log.Fatalf("Unable to open database: %v\n", err)
+		log.Printf("Unable to open database: %v\n", err)
+		return err
 	}
 
 	if err := db.Ping(); err != nil {
-		log.Fatalf("Unable to connect to the database: %v\n", err)
+		log.Printf("Unable to connect to the database: %v\n", err)
+		return err
 	}
 
 	fmt.Println("Successfully connected to PostgreSQL")
+	return nil
 }
 
 // CloseDB closes the database connection.
@@ -63,7 +66,7 @@ func GetBookList() ([]Book, error) {
 		if err := rows.Scan(&id, &name, &cost); err != nil {
 			return nil, fmt.Errorf("error scanning row: %v", err)
 		}
-		// Collect results into a map
+		// Collect results into a map--------- Map Approach is changed
 		results = append(results, Book{
 			ID:   id,
 			Name: name,
@@ -95,15 +98,50 @@ func CreateBook(book Book) error {
 // WHERE id = 5
 
 func UpdateBook(book Book) error {
-	query := "UPDATE book SET name = $1, cost = $2 WHERE id = $3"
+	//query := "UPDATE book SET name = $1, cost = $2 WHERE id = $3"
 
-	_, err := db.Exec(query, book.Name, book.Cost, book.ID)
-	if err != nil {
-		return fmt.Errorf("failed to Update book: %v", err)
+	fmt.Println("What do you want to update...?")
+	fmt.Println("1. Book Name ")
+	fmt.Println("2. Book Cost")
+	fmt.Println("3. Both Book Name and Cost")
+
+	var choose int
+	fmt.Scanln(&choose)
+
+	switch choose {
+
+	case 1:
+
+		query := "UPDATE book SET name = $1 WHERE id = $2"
+		_, err := db.Exec(query, book.Name, book.ID)
+		if err != nil {
+			return fmt.Errorf("failed to Update book: %v", err)
+		}
+
+	case 2:
+
+		query := "UPDATE book SET cost = $1 WHERE id = $2"
+		_, err := db.Exec(query, book.Cost, book.ID)
+		if err != nil {
+			return fmt.Errorf("failed to Update book: %v", err)
+		}
+
+	case 3:
+		query := "UPDATE book SET name = $1, cost = $2 WHERE id = $3"
+		_, err := db.Exec(query, book.Name, book.Cost, book.ID)
+		if err != nil {
+			return fmt.Errorf("failed to Update book: %v", err)
+		}
 	}
+
+	// 	_, err := db.Exec(query, book.Name, book.Cost, book.ID)
+	// 	if err != nil {
+	// 		return fmt.Errorf("failed to Update book: %v", err)
+	// 	}
 
 	fmt.Println("Book Updated successfully")
 	return nil
+
 }
 
 func DeleteBook(bookID int) error {
