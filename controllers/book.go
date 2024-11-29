@@ -29,6 +29,12 @@ func CreateBooK(c *gin.Context) {
 		})
 		return
 	}
+	if book.Cost <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "cost should not be less than or equals to zero",
+		})
+		return
+	}
 
 	log.Println("====>", book)
 
