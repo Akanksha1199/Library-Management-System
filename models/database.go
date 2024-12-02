@@ -1,12 +1,10 @@
 package models
 
 import (
-	"database/sql"
 	"fmt"
+	"l-m-s/config"
 	"log"
 )
-
-var db *sql.DB
 
 // create a book struct
 type Book struct {
@@ -21,6 +19,14 @@ This function fetch or return a list of books.
 The function returns a slice of Book structs. The function also returns an error type.
 */
 func GetBookList() ([]Book, error) {
+	db, err := config.ConnectToDB()
+	if err != nil {
+		fmt.Errorf("Error in connecting database: %v", err)
+		return nil, err
+	}
+
+	// Close the databse
+	defer db.Close()
 	//.Query is a method used to run an SQL query against the database. It retrieves data from the database based on the SQL command provided.
 	rows, err := db.Query("SELECT id, name, cost FROM book")
 	if err != nil {
@@ -56,13 +62,19 @@ It is a function named as CreateBook.
 -Book is the type of the parameter, meaning the function expects an argument of type Book.
 */
 func CreateBook(book Book) error {
+	db, err := config.ConnectToDB()
+	if err != nil {
+		return fmt.Errorf("Error in connecting database: %v", err)
+	}
 
+	// Close the databse
+	defer db.Close()
 	//query is a variable that holds the SQL query as a string.
 	query := "INSERT INTO book (id, name, cost ) VALUES ($1, $2, $3)"
 
 	//_: The underscore is used to ignore the result of a function when it's not needed.
 	//db.Exec is a method from the *sql.DB type in Go that is used to execute a query on the database.
-	_, err := db.Exec(query, book.ID, book.Name, book.Cost)
+	_, err = db.Exec(query, book.ID, book.Name, book.Cost)
 	if err != nil {
 		return fmt.Errorf("failed to Create book: %v", err)
 	}
@@ -73,45 +85,44 @@ func CreateBook(book Book) error {
 
 func UpdateBook(book Book) error {
 	//query := "UPDATE book SET name = $1, cost = $2 WHERE id = $3"
+	var SetValues string
 
-	fmt.Println("What do you want to update...?")
-	fmt.Println("1. Book Name ")
-	fmt.Println("2. Book Cost")
-	fmt.Println("3. Both Book Name and Cost")
+	db, err := config.ConnectToDB()
+	if err != nil {
+		return fmt.Errorf("Error in connecting database: %v", err)
+	}
 
-	var choose int
-	fmt.Scanln(&choose)
+	// Close the databse
+	defer db.Close()
 
-	switch choose {
+	if db == nil {
+		return fmt.Errorf("database connection is not initialized")
+	}
 
-	case 1:
-
-		query := "UPDATE book SET name = $1 WHERE id = $2"
-		_, err := db.Exec(query, book.Name, book.ID)
-		if err != nil {
-			return fmt.Errorf("failed to Update book: %v", err)
+	if len(book.Name) > 0 {
+		SetValues += " name = '" + book.Name + "'"
+		if book.Cost > 0 {
+			SetValues += fmt.Sprintf(" ,cost = %v", book.Cost)
 		}
+	} else if book.Cost > 0 {
+		SetValues += fmt.Sprintf(" cost = %v ", book.Cost)
+	}
 
-	case 2:
+	if len(SetValues) == 0 {
+		fmt.Println("There is no value to Update")
+		return nil
+	}
 
-		if book.Cost <= 0 {
-			return fmt.Errorf("cost must be greater than 0")
-		}
-		query := "UPDATE book SET cost = $1 WHERE id = $2"
-		_, err := db.Exec(query, book.Cost, book.ID)
-		if err != nil {
-			return fmt.Errorf("failed to Update book: %v", err)
-		}
+	query := `UPDATE book
+	SET ` + SetValues +
+		` WHERE id = $1`
 
-	case 3:
-		if book.Cost <= 0 {
-			return fmt.Errorf("cost must be greater than 0")
-		}
-		query := "UPDATE book SET name = $1, cost = $2 WHERE id = $3"
-		_, err := db.Exec(query, book.Name, book.Cost, book.ID)
-		if err != nil {
-			return fmt.Errorf("failed to Update book: %v", err)
-		}
+	log.Println(query)
+
+	// query := "UPDATE book SET name = CASE WHEN $1 IS NOT NULL THEN $1 ELSE name END, cost = CASE WHEN $2 IS NOT NULL THEN $2 ELSE cost END WHERE id = $3"
+	_, err = db.Exec(query, book.ID)
+	if err != nil {
+		return fmt.Errorf("failed to Update book: %v", err)
 	}
 
 	fmt.Println("Book Updated successfully")
@@ -121,10 +132,17 @@ func UpdateBook(book Book) error {
 
 // This function will use this bookID to identify which book to delete from the database or list.
 func DeleteBook(bookID int) error {
+	db, err := config.ConnectToDB()
+	if err != nil {
+		return fmt.Errorf("Error in connecting database: %v", err)
+	}
+
+	// Close the databse
+	defer db.Close()
 
 	query := "DELETE FROM book WHERE id = $1"
 
-	_, err := db.Exec(query, bookID)
+	_, err = db.Exec(query, bookID)
 	if err != nil {
 		return fmt.Errorf("failed to Delete book: %v", err)
 	}
@@ -135,6 +153,14 @@ func DeleteBook(bookID int) error {
 
 // Book is the return type of the function. The function will return a Book struct and error
 func GetBookById(id int) (Book, error) {
+	db, err := config.ConnectToDB()
+	if err != nil {
+		fmt.Errorf("Error in connecting database: %v", err)
+		return Book{}, err
+	}
+
+	// Close the databse
+	defer db.Close()
 	var cost int
 	var name string
 	var book Book
@@ -143,7 +169,7 @@ func GetBookById(id int) (Book, error) {
 
 	//QueryRow(query, id): executes the SQL query but expects only one row to be returned.
 	//.Scan(&id, &name, &cost) : is a method that reads the data returned by QueryRow and places it into the variables id, name, and cost.
-	err := db.QueryRow(query, id).Scan(&id, &name, &cost)
+	err = db.QueryRow(query, id).Scan(&id, &name, &cost)
 	if err != nil {
 		log.Printf("no book found with id %d", id)
 		return book, err
