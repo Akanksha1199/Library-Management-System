@@ -14,6 +14,7 @@ func Allroutes(router *gin.RouterGroup) {
 	router.PUT("/book", controllers.UpdateBook)
 	router.DELETE("/book", controllers.DeleteBook)
 	router.GET("/book", controllers.GetBookById)
+	router.PUT("/book/assign", controllers.AssignBook)
 }
 
 // Function SetUp() returns a pointer to a gin.Engine object. This function is used to initialize and configure a web server.

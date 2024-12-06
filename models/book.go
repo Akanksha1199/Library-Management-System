@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql"
 	"fmt"
 	"l-m-s/config"
 	"log"
@@ -8,11 +9,21 @@ import (
 
 // create a book struct
 type Book struct {
-	ID       int    `json:"id"` //These json tag tells Go's JSON library how to map this field when converting the struct to/from JSON.
-	Name     string `json:"name"`
-	Cost     int    `json:"cost"`
-	Returned bool   `json:"returned"`
+	ID   int    `json:"id"` //These json tag tells Go's JSON library how to map this field when converting the struct to/from JSON.
+	Name string `json:"name"`
+	Cost int    `json:"cost"`
 }
+
+// type Student struct {
+// 	ID   int    `json:"id"`
+// 	Name string `json:"name"`
+// }
+
+// type Assign_Book struct {
+// 	SNo       int `json:"sno"`
+// 	BookID    int `json:"bookID"`
+// 	StudentTD int `json:"StuID"`
+// }
 
 /*
 This function fetch or return a list of books.
@@ -21,8 +32,7 @@ The function returns a slice of Book structs. The function also returns an error
 func GetBookList() ([]Book, error) {
 	db, err := config.ConnectToDB()
 	if err != nil {
-		fmt.Errorf("Error in connecting database: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("error in connecting database: %v", err)
 	}
 
 	// Close the databse
@@ -42,7 +52,8 @@ func GetBookList() ([]Book, error) {
 	for rows.Next() {
 		var id, cost int
 		var name string
-		if err := rows.Scan(&id, &name, &cost); err != nil {
+		var assigned bool
+		if err := rows.Scan(&id, &name, &cost, &assigned); err != nil {
 			return nil, fmt.Errorf("error scanning row: %v", err)
 		}
 		//It(results) starts as an empty slice, and new books are added to it using the append() function.
@@ -64,7 +75,7 @@ It is a function named as CreateBook.
 func CreateBook(book Book) error {
 	db, err := config.ConnectToDB()
 	if err != nil {
-		return fmt.Errorf("Error in connecting database: %v", err)
+		return fmt.Errorf("error in connecting database: %v", err)
 	}
 
 	// Close the databse
@@ -84,12 +95,12 @@ func CreateBook(book Book) error {
 }
 
 func UpdateBook(book Book) error {
-	//query := "UPDATE book SET name = $1, cost = $2 WHERE id = $3"
+	//query := "UPDATE book SET name = $1, cost = $2, assigned = $3 WHERE id = $4"
 	var SetValues string
 
 	db, err := config.ConnectToDB()
 	if err != nil {
-		return fmt.Errorf("Error in connecting database: %v", err)
+		return fmt.Errorf("error in connecting database: %v", err)
 	}
 
 	// Close the databse
@@ -134,7 +145,7 @@ func UpdateBook(book Book) error {
 func DeleteBook(bookID int) error {
 	db, err := config.ConnectToDB()
 	if err != nil {
-		return fmt.Errorf("Error in connecting database: %v", err)
+		return fmt.Errorf("error in connecting database: %v", err)
 	}
 
 	// Close the databse
@@ -145,8 +156,8 @@ func DeleteBook(bookID int) error {
 	_, err = db.Exec(query, bookID)
 	if err != nil {
 		return fmt.Errorf("failed to Delete book: %v", err)
-	}
 
+	}
 	fmt.Println("Book Deleted successfully")
 	return nil
 }
@@ -155,8 +166,7 @@ func DeleteBook(bookID int) error {
 func GetBookById(id int) (Book, error) {
 	db, err := config.ConnectToDB()
 	if err != nil {
-		fmt.Errorf("Error in connecting database: %v", err)
-		return Book{}, err
+		return Book{}, fmt.Errorf("error in connecting database: %v", err)
 	}
 
 	// Close the databse
@@ -165,10 +175,12 @@ func GetBookById(id int) (Book, error) {
 	var name string
 	var book Book
 
-	query := "SELECT id,name,cost FROM book WHERE id = $1"
+	query := `SELECT id, name, cost
+              FROM book
+              WHERE id = $1`
 
 	//QueryRow(query, id): executes the SQL query but expects only one row to be returned.
-	//.Scan(&id, &name, &cost) : is a method that reads the data returned by QueryRow and places it into the variables id, name, and cost.
+	//.Scan(&id, &name, &cost,&assigned) : is a method that reads the data returned by QueryRow and places it into the variables id, name, cost, assigned.
 	err = db.QueryRow(query, id).Scan(&id, &name, &cost)
 	if err != nil {
 		log.Printf("no book found with id %d", id)
@@ -182,3 +194,47 @@ func GetBookById(id int) (Book, error) {
 	}
 	return book, nil
 }
+
+func AssignBook(studentID int, bookID int) error {
+	db, err := config.ConnectToDB()
+	if err != nil {
+		log.Printf("error in connecting Database, %v", err)
+		return err
+	}
+	defer db.Close()
+
+	var status sql.NullBool
+	query := `SELECT status
+	FROM assign_book
+	WHERE book_id = $1`
+
+	err = db.QueryRow(query, bookID).Scan(&status)
+	if err != nil {
+		log.Printf("error checking book assignment status: %v", err)
+		//return err
+	}
+	if status.Bool {
+		return fmt.Errorf("book with ID %d is already assigned", bookID)
+	}
+
+	insertQuery := "INSERT INTO assign_book (student_id, book_id,) VALUES ($1, $2, true)"
+	_, err = db.Exec(insertQuery, studentID, bookID)
+	if err != nil {
+		log.Printf("error inserting assignment record: %v", err)
+		return err
+	}
+
+	fmt.Println("Book assigned successfully")
+	return nil
+}
+
+// CREATE TABLE assign_book(
+// 	id SERIAL PRIMARY KEY,
+// 	book_id INT NOT NULL,
+// 	student_id INT NOT NULL,
+// 	status BOOLEAN NOT NULL
+// );
+
+// SELECT id, name, cost
+// FROM book
+// WHERE id = $1;
