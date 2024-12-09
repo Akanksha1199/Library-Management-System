@@ -14,17 +14,6 @@ type Book struct {
 	Cost int    `json:"cost"`
 }
 
-// type Student struct {
-// 	ID   int    `json:"id"`
-// 	Name string `json:"name"`
-// }
-
-// type Assign_Book struct {
-// 	SNo       int `json:"sno"`
-// 	BookID    int `json:"bookID"`
-// 	StudentTD int `json:"StuID"`
-// }
-
 /*
 This function fetch or return a list of books.
 The function returns a slice of Book structs. The function also returns an error type.
@@ -52,8 +41,8 @@ func GetBookList() ([]Book, error) {
 	for rows.Next() {
 		var id, cost int
 		var name string
-		var assigned bool
-		if err := rows.Scan(&id, &name, &cost, &assigned); err != nil {
+		//var assigned bool
+		if err := rows.Scan(&id, &name, &cost); err != nil {
 			return nil, fmt.Errorf("error scanning row: %v", err)
 		}
 		//It(results) starts as an empty slice, and new books are added to it using the append() function.
