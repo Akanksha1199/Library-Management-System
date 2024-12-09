@@ -26,7 +26,7 @@ func CreateStudent(student Student) error {
 	query := `INSERT INTO student(id, name, email, phone, dob, gender, created_at)
               VALUES ($1,$2,$3,$4,$5,$6,NOW())`
 
-	_, err = db.Exec(query, student.ID, student.Name, student.Email, student.Phone, student.DOB, student.Gender, student.Created_At)
+	_, err = db.Exec(query, student.ID, student.Name, student.Email, student.Phone, student.DOB, student.Gender)
 
 	if err != nil {
 		return fmt.Errorf("failed to create student,%v", err)
