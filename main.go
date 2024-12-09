@@ -1,26 +1,26 @@
 package main
 
 import (
-	"l-m-s/controllers"
-	"l-m-s/models"
+	"l-m-s/routes"
 
-	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 )
 
 func main() {
 
-	// Connect to the database
-	models.ConnectToDB()
-	defer models.CloseDB()
-
-	// Initialize Gin router
-	router := gin.Default()
-
-	// Register routes
-	router.POST("/book", controllers.CreateBooK)
-	router.GET("/books", controllers.GetBookList)
+	//It sets up the router for further use
+	routes := routes.SetUp()
 
 	// Start the server
-	router.Run(":8080")
+	routes.Run(":8080")
 }
+
+// CREATE TABLE student(
+// 	id SERIAL PRIMARY KEY,
+// 	name varchar(50) NOT NULL,
+// 	email VARCHAR(100) UNIQUE NOT NULL,
+// 	phone VARCHAR(12) NOT NULL CHECK(phone IN('+[0,9]')),
+// 	dob DATE,
+// 	gender VARCHAR(15) CHECK(gender IN('Male', 'Female', 'Other')),
+// 	enrollment_date DATE
+// 	);
