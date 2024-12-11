@@ -19,12 +19,17 @@ func GetBookList(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": data})
 }
 
+/*
+- c is the context object provided by the Gin framework, which allows you to handle HTTP requests and responses.
+*/
 func CreateBooK(c *gin.Context) {
 	var book models.Book
 
+	//This takes data sent by the user in the request (e.g., JSON or form data) and tries to fill the book variable with it.
 	err := c.ShouldBind(&book)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusBadRequest, gin.H{ //gin.H: This is a shortcut provided by Gin for creating a map[string]interface{}.
+
 			"error": err.Error(),
 		})
 		return
