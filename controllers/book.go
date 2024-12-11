@@ -9,10 +9,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// GetLibraryData handles the GET request to fetch data from the library table.
+// GetBookList handles the GET request to fetch data from the book table.
 func GetBookList(c *gin.Context) {
 	data, err := models.GetBookList()
 	if err != nil {
+		log.Printf("unable to fetch book list %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -28,6 +29,7 @@ func CreateBooK(c *gin.Context) {
 	//This takes data sent by the user in the request (e.g., JSON or form data) and tries to fill the book variable with it.
 	err := c.ShouldBind(&book)
 	if err != nil {
+		log.Printf("unable to bind book details %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{ //gin.H: This is a shortcut provided by Gin for creating a map[string]interface{}.
 
 			"error": err.Error(),
@@ -41,10 +43,18 @@ func CreateBooK(c *gin.Context) {
 		return
 	}
 
+	if book.ID <= 0 {
+		log.Println("Book ID must be greater than 0")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Book ID must be greater than 0"})
+		return
+	}
+
 	log.Println("====>", book)
 
 	err = models.CreateBook(book)
 	if err != nil {
+		log.Printf("unable to create book %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -59,6 +69,13 @@ func UpdateBook(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
+		return
+	}
+
+	if book.ID <= 0 {
+		log.Println("Book ID must be greater than 0")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Book ID must be greater than 0"})
 		return
 	}
 
@@ -79,6 +96,14 @@ func DeleteBook(c *gin.Context) {
 			"error": err.Error()})
 		return
 	}
+
+	if bookID <= 0 {
+		log.Println("Book ID must be greater than 0")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Book ID must be greater than 0"})
+		return
+	}
+
 	err = models.DeleteBook(bookID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -97,6 +122,13 @@ func GetBookById(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error()})
+		return
+	}
+
+	if bookID <= 0 {
+		log.Println("Book ID must be greater than 0")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Book ID must be greater than 0"})
 		return
 	}
 
