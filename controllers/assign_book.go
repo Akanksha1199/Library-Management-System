@@ -8,7 +8,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// This function handles http request to assign a book to a student.
+// AssignBook will assign a book to the student and stored this information in the database
+// Parameters accepted:
+// book_id:
+// student_id:
 func AssignBook(c *gin.Context) {
 
 	stuId := c.PostForm("student_id")

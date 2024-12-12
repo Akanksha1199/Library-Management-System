@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql"
 	"fmt"
 	"l-m-s/config"
 	"log"
@@ -13,10 +14,9 @@ type Book struct {
 	Cost int    `json:"cost"`
 }
 
-/*
-This function fetch or return a list of books.
-The function returns a slice of Book structs. The function also returns an error type.
-*/
+// GetBooklist
+// fetch or return a list of books.
+// This function also returns an error type.
 func GetBookList() ([]Book, error) {
 	db, err := config.ConnectToDB()
 	if err != nil {
@@ -55,11 +55,9 @@ func GetBookList() ([]Book, error) {
 	return results, nil
 }
 
-/*
-It is a function named as CreateBook.
--book is a parameter passed into the function.
--Book is the type of the parameter, meaning the function expects an argument of type Book.
-*/
+// CreateBook
+// Parameters Accepted: a book Struct of type Book
+// Parameters Returned: it returns an error
 func CreateBook(book Book) error {
 	db, err := config.ConnectToDB()
 	if err != nil {
@@ -83,7 +81,6 @@ func CreateBook(book Book) error {
 }
 
 func UpdateBook(book Book) error {
-	//query := "UPDATE book SET name = $1, cost = $2, assigned = $3 WHERE id = $4"
 	var SetValues string
 
 	db, err := config.ConnectToDB()
@@ -91,7 +88,6 @@ func UpdateBook(book Book) error {
 		return fmt.Errorf("error in connecting database: %v", err)
 	}
 
-	// Close the databse
 	defer db.Close()
 
 	if db == nil {
@@ -118,7 +114,6 @@ func UpdateBook(book Book) error {
 
 	log.Println(query)
 
-	// query := "UPDATE book SET name = CASE WHEN $1 IS NOT NULL THEN $1 ELSE name END, cost = CASE WHEN $2 IS NOT NULL THEN $2 ELSE cost END WHERE id = $3"
 	_, err = db.Exec(query, book.ID)
 	if err != nil {
 		return fmt.Errorf("failed to Update book: %v", err)
@@ -129,7 +124,9 @@ func UpdateBook(book Book) error {
 
 }
 
-// This function will use this bookID to identify which book to delete from the database or list.
+// DeleteBook
+// Parameters Accepted: a bookID of type int
+// Parameters Returned: it returns an error
 func DeleteBook(bookID int) error {
 	db, err := config.ConnectToDB()
 	if err != nil {
@@ -139,9 +136,13 @@ func DeleteBook(bookID int) error {
 	// Close the databse
 	defer db.Close()
 
-	query := "DELETE FROM book WHERE id = $1"
+	query := `DELETE FROM book
+	          WHERE id = $1
+			  RETURNING id`
 
-	_, err = db.Exec(query, bookID)
+	var id sql.NullInt64
+
+	err = db.QueryRow(query, bookID).Scan(&id)
 	if err != nil {
 		return fmt.Errorf("failed to Delete book: %v", err)
 
@@ -150,7 +151,9 @@ func DeleteBook(bookID int) error {
 	return nil
 }
 
-// Book is the return type of the function. The function will return a Book struct and error
+// GetBookById
+// Parameters Accepted: a book id of type int
+// prameters Returned: this function will return a Book struct and error
 func GetBookById(id int) (Book, error) {
 	db, err := config.ConnectToDB()
 	if err != nil {

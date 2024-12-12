@@ -1,26 +1,32 @@
 package main
 
 import (
+	"log"
+	"os"
+
 	"l-m-s/routes"
 
-	_ "github.com/lib/pq"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	// Load .env file
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Println("Error loading .env file")
+	}
 
-	//It sets up the router for further use
-	routes := routes.SetUp()
+	// Get the port from the .env file
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080" // Default port
+		log.Println("PORT not specified in .env file or environment. Using default:", port)
+	}
+
+	// Set up the router for further use
+	r := routes.SetUp()
 
 	// Start the server
-	routes.Run(":8080")
+	log.Println("Starting server on port:", port)
+	r.Run(":" + port)
 }
-
-// CREATE TABLE student(
-// 	id SERIAL PRIMARY KEY,
-// 	name varchar(50) NOT NULL,
-// 	email VARCHAR(100) UNIQUE NOT NULL,
-// 	phone VARCHAR(12) NOT NULL CHECK(phone IN('+[0,9]')),
-// 	dob DATE,
-// 	gender VARCHAR(15) CHECK(gender IN('Male', 'Female', 'Other')),
-// 	enrollment_date DATE
-// 	);

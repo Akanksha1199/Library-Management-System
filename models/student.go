@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql"
 	"fmt"
 	"l-m-s/config"
 	"log"
@@ -16,6 +17,9 @@ type Student struct {
 	Created_At string `json:"created_at,omitempty"`
 }
 
+// CreateStudent
+// Accepted Parameters: a variable student of type Student
+// Returned Parameters: this function returns an error
 func CreateStudent(student Student) error {
 	db, err := config.ConnectToDB()
 	if err != nil {
@@ -36,6 +40,9 @@ func CreateStudent(student Student) error {
 
 }
 
+// GetStudentList
+// Accepted Parameters: do not accept any parameter
+// Returned Parameters: returns Student struct and an error
 func GetStudentList() ([]Student, error) {
 	db, err := config.ConnectToDB()
 	if err != nil {
@@ -55,7 +62,7 @@ func GetStudentList() ([]Student, error) {
 	var result []Student
 
 	var id int
-	var name, email, phone, dob, gender, created_at string
+	var name, email, phone, dob, gender, created_at sql.NullString
 	for rows.Next() {
 
 		if err := rows.Scan(&id, &name, &email, &phone, &dob, &gender, &created_at); err != nil {
@@ -63,23 +70,27 @@ func GetStudentList() ([]Student, error) {
 		}
 		result = append(result, Student{
 			ID:         id,
-			Name:       name,
-			Email:      email,
-			Phone:      phone,
-			DOB:        dob,
-			Gender:     gender,
-			Created_At: created_at,
+			Name:       name.String,
+			Email:      email.String,
+			Phone:      phone.String,
+			DOB:        dob.String,
+			Gender:     gender.String,
+			Created_At: created_at.String,
 		})
 	}
 	return result, nil
 }
 
+// UpdateStudent
+// Accepted Parameters: a variable student of type Student
+// Returned Parameters: returns an error
 func UpdateStudent(student Student) error {
 	var SetValues string
 
 	db, err := config.ConnectToDB()
 	if err != nil {
-		return fmt.Errorf("error in connecting database: %v", err)
+		log.Println("error in connecting database with: ", err)
+		return err
 	}
 
 	defer db.Close()
@@ -111,7 +122,7 @@ func UpdateStudent(student Student) error {
 
 	query := `UPDATE student
 	SET ` + SetValues +
-		`,updated_at=NOW() 
+		`,updated_at = NOW() 
 		WHERE id = $1`
 
 	log.Println(query)
@@ -126,16 +137,20 @@ func UpdateStudent(student Student) error {
 
 }
 
+// DeleteStudent
+// Accepted Parameters: a variable studentID of type int
+// Returned Parameters: returns an error
 func DeleteStudent(studentID int) error {
 	db, err := config.ConnectToDB()
 	if err != nil {
 		return fmt.Errorf("error in connecting database: %v", err)
 	}
 	defer db.Close()
+	var id sql.NullInt64
+	query := `DELETE FROM student 
+	          WHERE id = $1 RETURNING id`
 
-	query := "DELETE FROM student WHERE id = $1"
-
-	_, err = db.Exec(query, studentID)
+	err = db.QueryRow(query, studentID).Scan(&id)
 	if err != nil {
 		return fmt.Errorf("failed to Delete student: %v", err)
 
@@ -144,13 +159,16 @@ func DeleteStudent(studentID int) error {
 	return nil
 }
 
+// GetStudentById
+// Accepted Parameters: a variable id of type int
+// Returned Parameters: a Student struct and an error
 func GetStudentById(id int) (Student, error) {
 	db, err := config.ConnectToDB()
 	if err != nil {
 		return Student{}, fmt.Errorf("error in connecting database: %v", err)
 	}
 	defer db.Close()
-	var name, email, phone, dob, gender, created_at string
+	var name, email, phone, dob, gender, created_at sql.NullString
 	var student Student
 
 	query := `SELECT id, name, email, phone, dob, gender, created_at
@@ -165,12 +183,12 @@ func GetStudentById(id int) (Student, error) {
 
 	student = Student{
 		ID:         id,
-		Name:       name,
-		Email:      email,
-		Phone:      phone,
-		DOB:        dob,
-		Gender:     gender,
-		Created_At: created_at,
+		Name:       name.String,
+		Email:      email.String,
+		Phone:      phone.String,
+		DOB:        dob.String,
+		Gender:     gender.String,
+		Created_At: created_at.String,
 	}
 	return student, nil
 }

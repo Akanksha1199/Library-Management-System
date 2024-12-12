@@ -7,7 +7,9 @@ import (
 	"log"
 )
 
-// This function assign a book to a student.
+// AssignBook
+// Accepted Parameters: two variables studentID and bookID of type int
+// Returned Parameters: returns an error
 func AssignBook(studentID int, bookID int) error {
 	db, err := config.ConnectToDB()
 	if err != nil {

@@ -9,19 +9,27 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// CreateStudent will create new reocrd of student in database with parameters( student_id , student_name, student_email, student_phone, student _dob, student_gender).
+// paremeters accepeted in the form of json:
+// id: (must be positve integer and not be equal to 0), ERROR:"Student ID must be greater than 0"
+// name: must not empty field and should start with an alphabet, ERROR:"unable to create student with:  failed to Create student"
+// email: must be unique, ERROR: "unable to create student"
+// phone: must be of at-most 12 digits
+// dob: must be in a date format
+// gender: must be any one out of these (Male, Female or Other)
 func CreateStudent(c *gin.Context) {
 	var student models.Student
 
 	err := c.BindJSON(&student)
 	if err != nil {
-		log.Printf("unable to bind student data %v", err)
+		log.Println("unable to bind student data with: ", err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "invalid input format"})
 		return
 	}
 
 	if student.ID <= 0 {
-		log.Println("Student ID must be greater than 0")
+		log.Printf("Student ID must be greater than 0")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Student ID must be greater than 0"})
 		return
@@ -38,6 +46,7 @@ func CreateStudent(c *gin.Context) {
 		"data": student})
 }
 
+// GetStudentList fetch students_data from the table, ERROR: "unable to fetch student list"
 func GetStudentList(c *gin.Context) {
 	data, err := models.GetStudentList()
 	if err != nil {
@@ -48,12 +57,21 @@ func GetStudentList(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": data})
 }
 
+// UpdateStudent will update the record of existing table in the database with the given student_id.
+// It will update the parameters(student_name, student_email, student_phone, student_dob and student_gender) but not (student_id)
+// Parameters accepted:-
+// id: (must be positve integer and not be equal to 0), ERROR:"Student ID must be greater than 0"
+// name: must not empty field and should start with an alphabet, ERROR:"error updating student with:  failed to Create student"
+// email: must be unique, ERROR: "unable to update student"
+// phone: must contain atmost 12 digits
+// dob: must be in a date format
+// gender: must be any one out of these (Male, Female or Other)
 func UpdateStudent(c *gin.Context) {
 	var student models.Student
 
 	err := c.ShouldBind(&student)
 	if err != nil {
-		log.Printf("error binding request data to student struct: %v", err)
+		log.Println("error binding request data to student struct with: ", err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
@@ -77,6 +95,8 @@ func UpdateStudent(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": student})
 }
 
+// DeleteStudent delete the record of a student from the database with the given student_id
+// Parameters accepted: id: (must be positve integer and not be equal to 0), ERROR:"Student ID must be greater than 0"
 func DeleteStudent(c *gin.Context) {
 	id := c.Query("id")
 	studentID, err := strconv.Atoi(id)
@@ -87,7 +107,7 @@ func DeleteStudent(c *gin.Context) {
 		return
 	}
 
-	if studentID <= 0 { //Q- Why here not student.ID??
+	if studentID <= 0 {
 		log.Println("Student ID must be a positive number")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Student ID must be a positive number"})
@@ -105,6 +125,9 @@ func DeleteStudent(c *gin.Context) {
 
 }
 
+// GetStudentById fetch the record of a student from the database with the given id
+// It fetches all the parameters of a student (id, name, email, phone, dob, gender)
+// Parameret accepted: id: (must be positve integer and not be equal to 0), ERROR:"Student ID must be greater than 0"
 func GetStudentById(c *gin.Context) {
 
 	id := c.Query("id")
