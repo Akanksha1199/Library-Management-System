@@ -96,7 +96,8 @@ func UpdateStudent(student Student) error {
 	defer db.Close()
 
 	if db == nil {
-		return fmt.Errorf("database connection is not initialized")
+		log.Println("database connection is not initialized with: ", err)
+		return err
 	}
 
 	if len(student.Name) > 0 {
@@ -121,9 +122,9 @@ func UpdateStudent(student Student) error {
 	}
 
 	query := `UPDATE student
-	SET ` + SetValues +
+	          SET ` + SetValues +
 		`,updated_at = NOW() 
-		WHERE id = $1`
+		      WHERE id = $1`
 
 	log.Println(query)
 
