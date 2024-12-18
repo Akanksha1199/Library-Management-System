@@ -2,8 +2,11 @@ package config
 
 import (
 	"database/sql" //package to interact with database.
-	"fmt"          //package for formatting strings.
-	"log"          //package for logging message in program.
+
+	_ "github.com/lib/pq" //pq driver for PostgreSQL
+
+	"fmt" //package for formatting strings.
+	"log" //package for logging message in program.
 )
 
 // ConnectToDB initializes the connection to the PostgreSQL database.

@@ -15,7 +15,11 @@ func Allroutes(router *gin.RouterGroup) {
 	router.DELETE("/book", controllers.DeleteBook)
 	router.GET("/book", controllers.GetBookById)
 
-	router.PUT("/book/assign", controllers.AssignBook)
+	router.POST("/book/issue", controllers.IssueBook)
+	router.PUT("/book/return", controllers.ReturnBook)
+	router.PUT("/book/reissue", controllers.ReIssueBook)
+
+	router.POST("/fine", controllers.ApplyFine)
 
 	router.POST("/student", controllers.CreateStudent)
 	router.GET("/students", controllers.GetStudentList)
